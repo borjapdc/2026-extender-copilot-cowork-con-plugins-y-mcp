@@ -1,0 +1,23 @@
+# Build results
+bin/
+obj/
+out/
+publish/
+
+# Environment and secrets
+appsettings.Development.json
+appsettings.Local.json
+.env
+.env.*.user
+*.pfx
+
+# Plugin packages and local settings
+dist/
+*.zip
+
+# IDE and operating system files
+.vs/
+.idea/
+.DS_Store
+Thumbs.db
+*.lscache

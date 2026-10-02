@@ -1,0 +1,134 @@
+@api_url = http://localhost:5100/api
+
+########## /api/knights - Knight queries ##########
+
+### Get all knights
+GET {{api_url}}/knights
+
+### Get knight by name - Seiya
+GET {{api_url}}/knights/Seiya
+
+### Get knight by name - Hyoga
+GET {{api_url}}/knights/Hyoga
+
+### Get knight by name - Shaka
+GET {{api_url}}/knights/Shaka
+
+########## /api/recommendations/knight - Knight recommendation ##########
+
+### Recommend knight for ice threat in Acuario
+POST {{api_url}}/recommendations/knight
+Content-Type: application/json
+
+{
+  "enemyType": "ice",
+  "location": "Acuario",
+  "urgency": "high",
+  "availableKnights": ["Seiya", "Shiryu", "Hyoga", "Shun", "Ikki"]
+}
+
+### Recommend knight for fire threat in Leo
+POST {{api_url}}/recommendations/knight
+Content-Type: application/json
+
+{
+  "enemyType": "fire",
+  "location": "Leo",
+  "urgency": "critical",
+  "availableKnights": ["Seiya", "Shiryu", "Hyoga"]
+}
+
+########## /api/threats/classify - Threat classification ##########
+
+### Classify ice threat near Acuario
+POST {{api_url}}/threats/classify
+Content-Type: application/json
+
+{
+  "description": "High cosmic energy of ice type detected near the house of Acuario. Multiple frost anomalies reported.",
+  "location": "Acuario",
+  "damageType": "ice"
+}
+
+### Classify cosmic threat near Leo
+POST {{api_url}}/threats/classify
+Content-Type: application/json
+
+{
+  "description": "A divine-level energy surge has been detected approaching the house of Leo. The cosmos signature does not match any known knight.",
+  "location": "Leo"
+}
+
+########## /api/battles/simulate - Battle simulation ##########
+
+### Simulate battle Seiya vs Ikki
+POST {{api_url}}/battles/simulate
+Content-Type: application/json
+
+{
+  "fighterA": "Seiya",
+  "fighterB": "Ikki",
+  "scenario": "Sanctuary",
+  "constraints": {
+    "noDivineArmor": true,
+    "fatigueLevel": "medium"
+  }
+}
+
+### Simulate battle Hyoga vs Milo
+POST {{api_url}}/battles/simulate
+Content-Type: application/json
+
+{
+  "fighterA": "Hyoga",
+  "fighterB": "Milo",
+  "scenario": "Scorpio House",
+  "constraints": {
+    "noDivineArmor": false,
+    "fatigueLevel": "none"
+  }
+}
+
+########## /api/missions/generate - Mission generation ##########
+
+### Generate mission to protect Sagitario
+POST {{api_url}}/missions/generate
+Content-Type: application/json
+
+{
+  "objective": "Protect the passage to Athena's chamber in the house of Sagitario",
+  "location": "Sagitario",
+  "assignedKnights": ["Seiya", "Shiryu", "Shun"],
+  "threatLevel": "gold"
+}
+
+### Generate mission for reconnaissance
+POST {{api_url}}/missions/generate
+Content-Type: application/json
+
+{
+  "objective": "Reconnaissance mission to identify the source of dark cosmos near the Star Hill",
+  "location": "Star Hill",
+  "assignedKnights": ["Mu", "Shaka"],
+  "threatLevel": "divine"
+}
+
+########## /api/cosmos/evaluate - Cosmos evaluation ##########
+
+### Evaluate cosmos of Shiryu after battle
+POST {{api_url}}/cosmos/evaluate
+Content-Type: application/json
+
+{
+  "knightName": "Shiryu",
+  "context": "after a long battle against a Gold Knight"
+}
+
+### Evaluate cosmos of Seiya at peak
+POST {{api_url}}/cosmos/evaluate
+Content-Type: application/json
+
+{
+  "knightName": "Seiya",
+  "context": "during the final confrontation at the Sanctuary"
+}

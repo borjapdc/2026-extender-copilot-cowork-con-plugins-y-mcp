@@ -1,0 +1,49 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.1",
+  "id": "3e4e040c-d368-4fcd-9e56-77ca38be6104",
+  "developer": {
+    "name": "Sanctuary Intelligence",
+    "websiteUrl": "https://github.com/bpiris/2026-collab-days-madrid",
+    "privacyUrl": "https://github.com/bpiris/2026-collab-days-madrid",
+    "termsOfUseUrl": "https://github.com/bpiris/2026-collab-days-madrid"
+  },
+  "name": {
+    "short": "Oraculo del Santuario SSO",
+    "full": "Oraculo del Santuario para Copilot Cowork con Entra SSO"
+  },
+  "description": {
+    "short": "Herramientas tacticas del Santuario mediante MCP.",
+    "full": "Plugin de Copilot Cowork que clasifica amenazas, recomienda caballeros, simula combates y genera misiones mediante un servidor MCP remoto."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#7B2D8E",
+  "agentSkills": [
+    {
+      "folder": "./skills/sanctuary-intelligence"
+    }
+  ],
+  "agentConnectors": [
+    {
+      "id": "sanctuary-intelligence-mcp",
+      "displayName": "Sanctuary Intelligence MCP",
+      "description": "Servidor MCP remoto con herramientas tacticas del Santuario.",
+      "toolSource": {
+        "remoteMcpServer": {
+          "mcpServerUrl": "https://g8ws64x6.uks1.devtunnels.ms:3001/mcp",
+          "mcpToolDescription": {
+            "file": "tools/sanctuary-tools.json"
+          },
+          "authorization": {
+            "type": "OAuthPluginVault",
+            "referenceId": "M2FiOGU1ZGUtNzJjNS00MTg4LWI4MzAtMTgyYTY3YWFlZDQzIyMyMDhlM2E5Yi1iOWRjLTQwZGMtYjY5MS1kNzEyMTYxNDQ0YzI="
+          }
+        }
+      }
+    }
+  ]
+}

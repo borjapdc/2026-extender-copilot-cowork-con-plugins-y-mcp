@@ -1,0 +1,72 @@
+{
+  "tools": [
+    {
+      "name": "generate_mission",
+      "description": "Generates a tactical mission to protect a zodiac house.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "objective": { "type": "string", "description": "The mission objective." },
+          "location": { "type": "string", "description": "The mission location." },
+          "assignedKnights": { "type": "string", "description": "Comma-separated assigned knights." },
+          "threatLevel": { "type": "string", "description": "Threat level: bronze, silver, gold, or divine." }
+        },
+        "required": ["objective", "location", "assignedKnights"]
+      }
+    },
+    {
+      "name": "evaluate_cosmos",
+      "description": "Evaluates the cosmos energy level of a knight.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "knightName": { "type": "string", "description": "The knight to evaluate." },
+          "context": { "type": "string", "description": "Optional context for the evaluation." }
+        },
+        "required": ["knightName"]
+      }
+    },
+    {
+      "name": "simulate_battle",
+      "description": "Simulates a battle between two knights or enemies and predicts the outcome.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "fighterA": { "type": "string", "description": "The first fighter." },
+          "fighterB": { "type": "string", "description": "The second fighter." },
+          "scenario": { "type": "string", "description": "Battle scenario or location.", "default": "Sanctuary" },
+          "noDivineArmor": { "type": "boolean", "description": "Whether divine armor is removed.", "default": false },
+          "fatigueLevel": { "type": "string", "description": "Fatigue level.", "default": "none" }
+        },
+        "required": ["fighterA", "fighterB"]
+      }
+    },
+    {
+      "name": "classify_threat",
+      "description": "Classifies a cosmic threat and proposes a response plan including recommended knights.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "description": { "type": "string", "description": "Description of the detected threat." },
+          "location": { "type": "string", "description": "Threat location." },
+          "damageType": { "type": "string", "description": "Expected damage type." }
+        },
+        "required": ["description", "location"]
+      }
+    },
+    {
+      "name": "recommend_knight",
+      "description": "Recommends the most suitable knight for a specific threat.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "enemyType": { "type": "string", "description": "Enemy or threat type." },
+          "location": { "type": "string", "description": "Threat location." },
+          "urgency": { "type": "string", "description": "Urgency level.", "default": "medium" },
+          "availableKnights": { "type": "string", "description": "Comma-separated available knights." }
+        },
+        "required": ["enemyType", "location"]
+      }
+    }
+  ]
+}

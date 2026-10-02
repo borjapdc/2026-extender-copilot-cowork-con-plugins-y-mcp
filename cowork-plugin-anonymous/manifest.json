@@ -1,0 +1,48 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.3",
+  "id": "44cb6b13-3e67-4b8d-b9c0-e6bf9146c6d4",
+  "developer": {
+    "name": "Sanctuary Intelligence",
+    "websiteUrl": "https://github.com/bpiris/2026-collab-days-madrid",
+    "privacyUrl": "https://github.com/bpiris/2026-collab-days-madrid",
+    "termsOfUseUrl": "https://github.com/bpiris/2026-collab-days-madrid"
+  },
+  "name": {
+    "short": "Oraculo del Santuario local",
+    "full": "Oraculo del Santuario para Copilot Cowork sin autenticacion"
+  },
+  "description": {
+    "short": "Demo local sin autenticacion de herramientas tacticas mediante MCP.",
+    "full": "Plugin de demostracion de Copilot Cowork que clasifica amenazas, recomienda caballeros, simula combates y genera misiones mediante un servidor MCP remoto sin autenticacion."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#7B2D8E",
+  "agentSkills": [
+    {
+      "folder": "./skills/sanctuary-intelligence"
+    }
+  ],
+  "agentConnectors": [
+    {
+      "id": "sanctuary-intelligence-mcp-anonymous",
+      "displayName": "Sanctuary Intelligence MCP Local",
+      "description": "Servidor MCP remoto de demostracion sin autenticacion.",
+      "toolSource": {
+        "remoteMcpServer": {
+          "mcpServerUrl": "https://g8ws64x6.uks1.devtunnels.ms:3001/mcp",
+          "mcpToolDescription": {
+            "file": "tools/sanctuary-tools.json"
+          },
+          "authorization": {
+            "type": "None"
+          }
+        }
+      }
+    }
+  ]
+}
