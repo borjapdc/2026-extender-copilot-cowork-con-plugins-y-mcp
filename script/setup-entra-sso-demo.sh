@@ -42,6 +42,7 @@ fi
 
 # These values override only the MCP configuration for this local process.
 export MCP_AUTH_ENABLED=true
+export API_AUTH_ENABLED=true
 export ENTRA_TENANT_ID
 export ENTRA_CLIENT_ID
 export ENTRA_APPLICATION_ID_URI

@@ -1,123 +1,137 @@
 # Extender Copilot Cowork con plugins y MCP
 
-Material de preparacion para la charla. Se basa exclusivamente en Microsoft Learn consultado el 2026-09-23.
+Material de preparacion para una charla sobre extensibilidad de Microsoft 365 Copilot Cowork con skills, conectores remotos MCP, Microsoft Entra SSO y Azure OpenAI.
 
-## Punto de rigor
+Consulta la [arquitectura y el alcance](docs/01-arquitectura-y-alcance.md), el [runbook de demo](docs/02-runbook-demo.md), los [controles de seguridad](docs/03-seguridad-y-gobierno.md) y las [fuentes de Learn](docs/04-fuentes-learn.md).
 
-La arquitectura que Microsoft Learn documenta para Cowork es un paquete M365 con `agentSkills` y, opcionalmente, `agentConnectors.remoteMcpServer`. Cowork llama al endpoint MCP remoto declarado en el manifiesto.
+## Arquitectura de la demo
 
-Microsoft Foundry AI gateway es una capacidad de vista previa para herramientas MCP creadas en Foundry. La documentacion no afirma que un conector de Cowork se enrute automaticamente a traves de ese gateway. Por tanto, no se debe presentar esa afirmacion en la charla sin una validacion practica en el tenant.
-
-Consulta [la arquitectura y la decision de demo](docs/01-arquitectura-y-alcance.md), el [paso a paso](docs/02-runbook-demo.md), los [controles de seguridad y gobierno](docs/03-seguridad-y-gobierno.md) y las [notas trazables de Learn](docs/04-fuentes-learn.md).
-
-## Resultado demostrable recomendado
-
-1. Un servidor MCP HTTPS propio que implemente Streamable HTTP, JSON-RPC 2.0, `initialize`, `tools/list` y `tools/call`.
-2. Un paquete Cowork que combine una skill con ese conector remoto.
-3. Microsoft Entra SSO u OAuth para cada usuario, configurado en Enterprise Token Store.
-4. Prueba privada del paquete desde Cowork y despues despliegue a un grupo piloto.
-5. Un segundo tramo, claramente etiquetado como preview y separado, que muestre la gobernanza de la misma clase de herramienta MCP en Foundry AI gateway/APIM.
-
-No hay secretos, IDs, URLs, iconos ni recursos Azure reales en este repositorio.
-
-## Material ejecutable para la demo
-
-- `src/SanctuaryIntelligence.Api`: API .NET 10 con datos sinteticos y un cliente Azure OpenAI simulado cuando no se configuran credenciales.
-- `src/SanctuaryIntelligence.Mcp`: servidor MCP Streamable HTTP en `/mcp` que expone cinco herramientas del Oraculo.
-- `http/`: peticiones para validar primero la API y despues el contrato MCP localmente.
-- `cowork-plugin/`: paquete Cowork con Entra SSO. Antes de empaquetarlo, hay que configurar su URL HTTPS y el `referenceId`; consulta su [guia](cowork-plugin/README.md).
-- `cowork-plugin-anonymous/`: paquete Cowork sin autenticacion, solo para la demo privada local con Dev Tunnels.
-
-### Usar Microsoft Foundry real (sin mock)
-
-La API usa `SanctuaryMockChatClient` solo si `AzureOpenAI:Endpoint` esta vacio, contiene `YOUR-RESOURCE` o no es una URI valida. Para usar un despliegue de Microsoft Foundry, configura `AzureOpenAI:Endpoint` con el endpoint del recurso o proyecto Foundry, `AzureOpenAI:DeploymentName` con el nombre exacto del despliegue y proporciona `AzureOpenAI:ApiKey` mediante variable de entorno (`AzureOpenAI__ApiKey`) o Secret Manager. La API agrega automaticamente `/openai/v1/` si no esta incluido en el endpoint.
-
-Tambien admite autenticacion sin clave mediante `DefaultAzureCredential` cuando no se proporciona `AzureOpenAI:ApiKey`. La identidad debe disponer de permisos de inferencia sobre el recurso Foundry. Reinicia la API despues de cambiar la configuracion.
-
-El MCP no simula las respuestas: sus herramientas llaman a la API indicada por `SanctuaryApi:BaseUrl` (por defecto, `http://localhost:5100`). Arranca la API configurada antes que el MCP y reinicia ambos servicios tras cambiar la configuracion.
-
-Para ejecutar la demo local:
-
-```bash
-dotnet run --project src/SanctuaryIntelligence.Api
-dotnet run --project src/SanctuaryIntelligence.Mcp
+```text
+Copilot Cowork
+    |
+    +-- skill Sanctuary Intelligence
+    |
+    +-- conector MCP remoto HTTPS
+              |
+              +-- Dev Tunnel local
+                        |
+                        +-- Sanctuary Intelligence MCP :3001
+                                  |
+                                  +-- Sanctuary Intelligence API :5100
+                                            |
+                                            +-- Azure OpenAI / Foundry
 ```
 
-### Probar Cowork localmente con Microsoft Dev Tunnels
+El MCP implementa Streamable HTTP en `/mcp`, descubre cinco herramientas y llama a la API local. La API usa Azure OpenAI cuando se configura y utiliza el cliente simulado cuando no hay endpoint.
 
-Para una prueba privada desde Copilot Cowork, Microsoft Dev Tunnels puede publicar el MCP local con una URL HTTPS. Es una opcion de desarrollo y demo; no sustituye un despliegue para piloto o produccion.
+## Dos variantes del plugin
 
-Con la API y el MCP en ejecucion, crea un tunel persistente para el puerto HTTP del MCP (`3001`):
+| Variante | Paquete | Autenticacion | Uso |
+| --- | --- | --- | --- |
+| Anonima | `cowork-plugin-anonymous/` | Sin JWT | Desarrollo y demo privada local. |
+| Entra SSO | `cowork-plugin/` | JWT de Microsoft Entra | Demo segura y base para un piloto. |
+
+Cada paquete tiene un manifiesto, identidad e iconos propios. Ambos incluyen la skill `sanctuary-intelligence` y un descriptor estatico de herramientas en `tools/sanctuary-tools.json`, requerido por el validador de Cowork.
+
+## Preparacion inicial
+
+### Dependencias
+
+- .NET 10 SDK.
+- Microsoft Dev Tunnels CLI y una sesion iniciada: `devtunnel user login`.
+- Bash: `curl`, `jq` o Node.js, y `zip` o Python 3.
+- PowerShell: `pwsh` y `Compress-Archive`.
+
+### Crear el tunel persistente
+
+El tunel se crea una sola vez. Los scripts lo alojan automaticamente en cada ejecucion.
 
 ```bash
-# Solo una vez en Linux
-curl -sL https://aka.ms/DevTunnelCliInstall | bash
-
-devtunnel user login
 devtunnel create --allow-anonymous
 devtunnel port create <TUNNEL_ID> -p 3001 --protocol http
 ```
 
-El identificador persistente se necesita tambien para los scripts de empaquetado. Arranca el host con `devtunnel host <TUNNEL_ID>` o deja que los scripts lo hagan. Al iniciarlo, copia la URL HTTPS publicada y asignala a `mcpServerUrl` en `cowork-plugin/manifest.json`, con la ruta `/mcp`:
+El acceso anonimo del tunel solo permite que Microsoft 365 alcance el servicio local. No sustituye la autenticacion Entra del MCP ni de la API.
 
-```json
-"mcpServerUrl": "https://<tunnel-id>.devtunnels.ms:3001/mcp"
+### Configurar el entorno local
+
+```bash
+cp script/.env.example script/.env
 ```
 
-El acceso anonimo del tunel permite a Microsoft 365 llegar al servidor local; no autentica al usuario ni sustituye la proteccion del MCP. Para la primera demo se puede mantener `Authentication:Enabled` en `false`. Para usar el conector de Cowork con `OAuthPluginVault`, configura despues Entra SSO y reemplaza tambien el `referenceId` del manifiesto.
+Completa en `script/.env` el `TUNNEL_ID`. Para Azure OpenAI real, configura tambien:
 
-Antes de la primera prueba, abre la URL de conexion que muestra `devtunnel host` en el navegador y selecciona **Continue** para habilitar el tunel. Al terminar la prueba, detiene el host con `Ctrl+C`. Consulta la guia oficial: [Debug MCP and API plugins locally](https://learn.microsoft.com/microsoft-365/copilot/extensibility/plugin-debug-local).
+```dotenv
+AZURE_OPENAI_ENDPOINT=https://<resource>.services.ai.azure.com/openai/v1
+AZURE_OPENAI_DEPLOYMENT_NAME=<deployment-name>
+AZURE_OPENAI_API_KEY=<api-key>
+```
 
-### Configurar Microsoft Entra SSO para Cowork
+El archivo `.env` esta ignorado por Git. Puede contener la API key local, asi que no debe compartirse ni añadirse al repositorio. Los scripts la inyectan solo en el proceso API; `appsettings.json` no contiene secretos ni valores de Azure OpenAI.
 
-Esta es la opcion recomendada para que Cowork identifique al usuario y el MCP valide su token JWT. El `referenceId` no es el identificador de la aplicacion de Entra: es el identificador de la configuracion SSO que se crea en Teams Developer Portal y se almacena en Enterprise Token Store.
+## Ejecutar la demo anonima
 
-1. Crea primero el tunel persistente de la seccion anterior y ejecuta `devtunnel host <TUNNEL_ID>` para obtener una URL publica estable. El endpoint MCP sera `https://<tunnel-id>.devtunnels.ms:3001/mcp`.
-2. En [Microsoft Entra admin center](https://entra.microsoft.com/), crea un registro de aplicacion de cuenta de un solo inquilino, por ejemplo `Sanctuary Intelligence MCP`. Copia su **Application (client) ID** y el **Directory (tenant) ID**.
-3. En **Expose an API**, crea un scope delegado, por ejemplo `access_as_user`, y anota su valor completo, normalmente `api://<CLIENT_ID>/access_as_user`.
-4. En [Teams Developer Portal](https://dev.teams.microsoft.com/tools), abre **Tools** > **Microsoft Entra SSO client ID registration** > **New client registration**. Indica el nombre de la demo, el endpoint MCP publico como **Base URL**, tu organizacion, `Any Teams app` para la prueba, el client ID de Entra y el scope creado. Al guardar, copia:
-	- **Microsoft Entra SSO registration ID**: es el valor de `referenceId`.
-	- **Application ID URI**: se debe permitir tanto en Entra como en el MCP.
-5. Vuelve al registro de aplicacion en Entra:
-	- Agrega el **Application ID URI** generado a `identifierUris` mediante el editor de manifiesto de la aplicacion.
-	- En **Authentication** > plataforma **Web**, agrega `https://teams.microsoft.com/api/platform/v1.0/oAuthConsentRedirect` como redirect URI.
-	- En **Expose an API** > **Add a client application**, agrega `ab3be6b7-f5df-413d-ac2d-abf1e3fd9c0b`, el client ID de Microsoft Enterprise Token Store, y autoriza el scope delegado.
-6. Configura [src/SanctuaryIntelligence.Mcp/appsettings.json](src/SanctuaryIntelligence.Mcp/appsettings.json) y reinicia el MCP:
+```bash
+bash script/setup-anonymous-demo.sh
+```
 
-	```json
-	"Authentication": {
-	  "Enabled": true,
-	  "Instance": "https://login.microsoftonline.com/",
-	  "TenantId": "<TENANT_ID>",
-	  "ClientId": "<MCP_APP_CLIENT_ID>",
-	  "Audience": "<APPLICATION_ID_URI>",
-	  "Audiences": ["<APPLICATION_ID_URI>"]
-	}
-	```
+```powershell
+pwsh -File ./script/setup-anonymous-demo.ps1
+```
 
-7. Genera el paquete con el tunel persistente y el ID SSO. El script valida los servicios, actualiza `mcpServerUrl` y `referenceId`, incrementa la version de parche y crea el ZIP en `dist/`:
+Este flujo inicia API, MCP y Dev Tunnel, actualiza el manifiesto anonimo y crea o reutiliza un ZIP versionado en `dist/`. API y MCP quedan abiertos para permitir la demo sin SSO.
 
-	```bash
-	bash script/prepare-cowork-plugin.sh \
-	  --tunnel-id <TUNNEL_ID> \
-	  --auth-config-id <MICROSOFT_ENTRA_SSO_REGISTRATION_ID>
-	```
+Sube el ZIP `sanctuary-cowork-plugin-anonymous-<version>.zip` en Cowork desde **Customize** > **Plugins** > **Add plugin** > **Only you**.
 
-8. En Cowork, usa **Customize** > **Plugins** > **Add plugin** > **Only you**, sube el ZIP y completa el consentimiento solicitado. Para detener los procesos locales al finalizar:
+## Ejecutar la demo con Entra SSO
 
-	```bash
-	bash script/prepare-cowork-plugin.sh --stop
-	```
+Antes de ejecutar, crea la configuracion SSO en Teams Developer Portal o Agents Toolkit y completa en `script/.env`:
 
-`--allow-anonymous` solo permite a Microsoft 365 alcanzar el puerto del tunel. Con `Authentication:Enabled` en `true`, el MCP sigue requiriendo el token de Entra de cada usuario. Consulta la guia oficial: [Configure Microsoft Entra SSO authentication](https://learn.microsoft.com/microsoft-365/copilot/extensibility/plugin-authentication-entra-sso).
+```dotenv
+ENTRA_TENANT_ID=<tenant-id>
+ENTRA_CLIENT_ID=<application-client-id>
+ENTRA_APPLICATION_ID_URI=<application-id-uri-generated-by-teams>
+ENTRA_SSO_REGISTRATION_ID=<teams-sso-registration-id>
+```
 
-### Elegir el paquete de la demo
+En el registro de aplicacion Entra debes:
 
-Los dos paquetes tienen la misma skill, pero usan identidades de aplicacion y mecanismos de autorizacion distintos. Instala solo uno en Cowork para cada tramo de la demo.
+1. Agregar el Application ID URI generado por Teams a `identifierUris`.
+2. Agregar `https://teams.microsoft.com/api/platform/v1.0/oAuthConsentRedirect` como redirect URI web.
+3. Autorizar el cliente Enterprise Token Store `ab3be6b7-f5df-413d-ac2d-abf1e3fd9c0b` para el scope delegado de la API.
 
-| Tramo | Paquete | Configuracion del MCP | Comando de empaquetado |
-| --- | --- | --- | --- |
-| Local sin autenticacion | `cowork-plugin-anonymous/` | `Authentication:Enabled: false` | `bash script/prepare-cowork-plugin.sh --plugin anonymous --tunnel-id <TUNNEL_ID>` |
-| Entra SSO | `cowork-plugin/` | `Authentication:Enabled: true` | `bash script/prepare-cowork-plugin.sh --plugin entra --tunnel-id <TUNNEL_ID> --auth-config-id <SSO_REGISTRATION_ID>` |
+Ejecuta el flujo:
 
-El servidor MCP actual expone el mismo endpoint `/mcp` en ambos casos. Por ello, detenlo y reinicialo despues de cambiar `Authentication:Enabled`; no pruebes los dos paquetes simultaneamente contra la misma instancia. La variante anonima es exclusivamente para desarrollo y demostracion privada.
+```bash
+bash script/setup-entra-sso-demo.sh
+```
+
+```powershell
+pwsh -File ./script/setup-entra-sso-demo.ps1
+```
+
+En este modo, Cowork entrega un token Bearer al MCP. MCP y API validan la misma audiencia Entra, la API exige autenticacion en `/api/*` y el MCP reenvia el bearer a la API. Las rutas `/` y `/health` permanecen anonimas para los health checks locales.
+
+Sube el ZIP `sanctuary-cowork-plugin-entra-<version>.zip` en Cowork y completa el consentimiento al activarlo.
+
+## Comandos de control
+
+Los scripts `setup-*` son los puntos de entrada. Internamente usan `prepare-cowork-plugin` para iniciar servicios, alojar el tunel, actualizar el manifiesto y crear el ZIP.
+
+```bash
+bash script/setup-anonymous-demo.sh --stop
+bash script/setup-entra-sso-demo.sh --stop
+```
+
+```powershell
+pwsh -File ./script/setup-anonymous-demo.ps1 -Stop
+pwsh -File ./script/setup-entra-sso-demo.ps1 -Stop
+```
+
+La parada detiene API, MCP y Dev Tunnel sin eliminar el tunel persistente, los ZIP ni el archivo `.env`.
+
+Consulta [script/README.md](script/README.md) para requisitos, comportamiento idempotente, logs y uso de un archivo de entorno alternativo.
+
+## Punto de rigor
+
+Microsoft Learn documenta Cowork como un paquete Microsoft 365 con `agentSkills` y, opcionalmente, `agentConnectors.remoteMcpServer`. No se debe afirmar que Cowork enruta automaticamente estos conectores mediante Foundry AI gateway: esa integracion requiere una validacion practica separada y se considera un tramo preview de la charla.

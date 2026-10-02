@@ -34,6 +34,7 @@ fi
 
 # These variables are consumed only by the MCP process launched from prepare-cowork-plugin.sh.
 export MCP_AUTH_ENABLED=false
+export API_AUTH_ENABLED=false
 bash "$SCRIPT_DIR/prepare-cowork-plugin.sh" \
     --plugin anonymous \
     --tunnel-id "$TUNNEL_ID" \

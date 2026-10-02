@@ -76,6 +76,7 @@ catch {
     -EntraTenantId $tenantId `
     -EntraClientId $clientId `
     -EntraApplicationIdUri $applicationIdUri `
+    -ApiAuthEnabled true `
     -AzureOpenAiEndpoint $azureOpenAiEndpoint `
     -AzureOpenAiDeploymentName $azureOpenAiDeploymentName `
     -AzureOpenAiApiKey $azureOpenAiApiKey `

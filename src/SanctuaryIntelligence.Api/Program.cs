@@ -1,4 +1,5 @@
 using Azure.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.AI;
 using Microsoft.Identity.Web;
 using OpenAI;
@@ -32,7 +33,15 @@ var authEnabled = builder.Configuration.GetValue<bool>("Authentication:Enabled")
 if (authEnabled)
 {
     builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration, "Authentication");
-    builder.Services.AddAuthorization();
+    var audiences = builder.Configuration.GetSection("Authentication:Audiences").Get<string[]>();
+    if (audiences is { Length: > 0 })
+    {
+        builder.Services.Configure<JwtBearerOptions>(
+            JwtBearerDefaults.AuthenticationScheme,
+            options => options.TokenValidationParameters.ValidAudiences = audiences);
+    }
+
+    builder.Services.AddAuthorization(options => options.FallbackPolicy = options.DefaultPolicy);
 }
 
 // ── Microsoft Foundry / Azure OpenAI via Microsoft.Extensions.AI ──
@@ -104,13 +113,14 @@ app.MapGet("/", () => Results.Ok(new
 .WithName("Root")
 .WithSummary("API health check")
 .WithDescription("Returns the API status and version information.")
-.ExcludeFromDescription();
+.ExcludeFromDescription()
+.AllowAnonymous();
 
 app.MapGet("/health", () => Results.Ok(new
 {
     status = "healthy",
     service = "sanctuary-intelligence-api"
-}));
+})).AllowAnonymous();
 
 app.MapKnightEndpoints();
 app.MapThreatEndpoints();

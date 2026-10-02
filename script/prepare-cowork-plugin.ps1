@@ -9,6 +9,8 @@ param(
     [string]$EntraTenantId,
     [string]$EntraClientId,
     [string]$EntraApplicationIdUri,
+    [ValidateSet('true', 'false')]
+    [string]$ApiAuthEnabled,
     [string]$AzureOpenAiEndpoint,
     [string]$AzureOpenAiDeploymentName,
     [string]$AzureOpenAiApiKey,
@@ -139,11 +141,19 @@ function Start-DemoService {
         RedirectStandardError = $errorPath
         PassThru = $true
     }
-    if ($Name -eq 'api' -and $AzureOpenAiEndpoint) {
+    if ($Name -eq 'api') {
         $startParameters.Environment = @{
             AzureOpenAI__Endpoint = $AzureOpenAiEndpoint
             AzureOpenAI__DeploymentName = $AzureOpenAiDeploymentName
             AzureOpenAI__ApiKey = $AzureOpenAiApiKey
+            Authentication__Enabled = $ApiAuthEnabled
+            Authentication__Instance = 'https://login.microsoftonline.com/'
+            Authentication__TenantId = $EntraTenantId
+            Authentication__ClientId = $EntraClientId
+            Authentication__Audience = $EntraApplicationIdUri
+            Authentication__Audiences__0 = $EntraApplicationIdUri
+            Authentication__Audiences__1 = "api://$EntraClientId"
+            Authentication__Audiences__2 = $EntraClientId
         }
     }
     elseif ($Name -eq 'mcp' -and $McpAuthEnabled) {

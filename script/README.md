@@ -2,7 +2,7 @@
 
 `prepare-cowork-plugin.sh` y `prepare-cowork-plugin.ps1` preparan una prueba de Copilot Cowork contra el MCP local. Ambos scripts realizan el mismo flujo:
 
-1. Inician la API en `http://localhost:5100` y esperan a que responda `GET /health`.
+1. Inician la API en `http://localhost:5100`, aplican Azure OpenAI y el modo de autenticacion elegido, y esperan a que responda `GET /health`.
 2. Inician el servidor MCP en `http://localhost:3001` y validan `GET /health` y `GET /tools`.
 3. Inician un Microsoft Dev Tunnel persistente ya creado para el puerto `3001`.
 4. Obtienen la URL HTTPS publica del tunel y actualizan el `mcpServerUrl` del manifiesto elegido.
@@ -41,7 +41,7 @@ Para usar Azure OpenAI real, completa tambien `AZURE_OPENAI_ENDPOINT`, `AZURE_OP
 
 ## Plugin anonimo
 
-Usa `cowork-plugin-anonymous/` y el manifiesto con `authorization.type` igual a `None`. Antes de ejecutarlo, configura `Authentication:Enabled` en `false` dentro de `src/SanctuaryIntelligence.Mcp/appsettings.json`.
+Usa `cowork-plugin-anonymous/` y el manifiesto con `authorization.type` igual a `None`. El script desactiva la autenticacion para API y MCP durante este modo.
 
 ```bash
 bash script/setup-anonymous-demo.sh
@@ -55,7 +55,7 @@ Este modo es exclusivamente para desarrollo y demostracion privada.
 
 ## Plugin Entra SSO
 
-Usa `cowork-plugin/` y `OAuthPluginVault`. Antes de ejecutarlo, configura `Authentication:Enabled` en `true` y proporciona el identificador de la configuracion SSO creada en Teams Developer Portal.
+Usa `cowork-plugin/` y `OAuthPluginVault`. El script habilita autenticacion para API y MCP y proporciona el identificador de la configuracion SSO creada en Teams Developer Portal.
 
 ```bash
 bash script/setup-entra-sso-demo.sh
@@ -68,6 +68,8 @@ pwsh -File ./script/setup-entra-sso-demo.ps1
 El `referenceId` del manifiesto es el **Microsoft Entra SSO registration ID**, no el client ID de la aplicacion de Entra.
 
 El script SSO requiere que el registro de aplicacion, el Application ID URI, el redirect URI y la configuracion SSO en Teams Developer Portal ya existan. El ultimo paso genera `ENTRA_SSO_REGISTRATION_ID`; el script valida que este valor se haya indicado en `.env` antes de iniciar la demo.
+
+En modo SSO, la API exige bearer token en `/api/*` y el MCP reenvia el bearer de Cowork en sus llamadas a la API. Las rutas de salud siguen siendo anonimas para que la orquestacion local pueda verificarlas.
 
 Los cuatro preparadores aceptan un archivo de entorno alternativo. En Bash usa `SANCTUARY_DEMO_ENV_FILE=/ruta/.env`; en PowerShell usa `-EnvFile /ruta/.env`.
 

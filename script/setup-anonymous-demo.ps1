@@ -62,6 +62,7 @@ catch {
     -Plugin anonymous `
     -TunnelId $tunnelId `
     -McpAuthEnabled false `
+    -ApiAuthEnabled false `
     -AzureOpenAiEndpoint $azureOpenAiEndpoint `
     -AzureOpenAiDeploymentName $azureOpenAiDeploymentName `
     -AzureOpenAiApiKey $azureOpenAiApiKey `

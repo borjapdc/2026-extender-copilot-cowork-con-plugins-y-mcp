@@ -267,11 +267,19 @@ start_service() {
         return
     fi
 
-    if [[ "$name" == "api" && -n "${AZURE_OPENAI_ENDPOINT:-}" ]]; then
+    if [[ "$name" == "api" ]]; then
         nohup env \
             AzureOpenAI__Endpoint="$AZURE_OPENAI_ENDPOINT" \
             AzureOpenAI__DeploymentName="${AZURE_OPENAI_DEPLOYMENT_NAME:-}" \
             AzureOpenAI__ApiKey="${AZURE_OPENAI_API_KEY:-}" \
+            Authentication__Enabled="${API_AUTH_ENABLED:-false}" \
+            Authentication__Instance="https://login.microsoftonline.com/" \
+            Authentication__TenantId="${ENTRA_TENANT_ID:-}" \
+            Authentication__ClientId="${ENTRA_CLIENT_ID:-}" \
+            Authentication__Audience="${ENTRA_APPLICATION_ID_URI:-}" \
+            Authentication__Audiences__0="${ENTRA_APPLICATION_ID_URI:-}" \
+            Authentication__Audiences__1="api://${ENTRA_CLIENT_ID:-}" \
+            Authentication__Audiences__2="${ENTRA_CLIENT_ID:-}" \
             dotnet run --project "$project" >"$log_file" 2>&1 &
     elif [[ "$name" == "mcp" && -n "${MCP_AUTH_ENABLED:-}" ]]; then
         nohup env \

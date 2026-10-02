@@ -44,12 +44,15 @@ if (authEnabled)
 }
 
 // Configure HttpClient for the Sanctuary API
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<SanctuaryIntelligence.Mcp.Auth.ForwardBearerTokenHandler>();
 builder.Services.AddHttpClient("SanctuaryApi", client =>
 {
     var apiUrl = builder.Configuration["SanctuaryApi:BaseUrl"] ?? "http://localhost:5100";
     client.BaseAddress = new Uri(apiUrl);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+})
+.AddHttpMessageHandler<SanctuaryIntelligence.Mcp.Auth.ForwardBearerTokenHandler>();
 
 // Register HttpClient for DI into MCP tools
 builder.Services.AddTransient(sp =>
