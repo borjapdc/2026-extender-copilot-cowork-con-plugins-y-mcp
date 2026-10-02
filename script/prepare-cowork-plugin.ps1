@@ -9,6 +9,9 @@ param(
     [string]$EntraTenantId,
     [string]$EntraClientId,
     [string]$EntraApplicationIdUri,
+    [string]$AzureOpenAiEndpoint,
+    [string]$AzureOpenAiDeploymentName,
+    [string]$AzureOpenAiApiKey,
     [switch]$SkipPackageIfUnchanged,
     [switch]$Stop
 )
@@ -136,7 +139,14 @@ function Start-DemoService {
         RedirectStandardError = $errorPath
         PassThru = $true
     }
-    if ($Name -eq 'mcp' -and $McpAuthEnabled) {
+    if ($Name -eq 'api' -and $AzureOpenAiEndpoint) {
+        $startParameters.Environment = @{
+            AzureOpenAI__Endpoint = $AzureOpenAiEndpoint
+            AzureOpenAI__DeploymentName = $AzureOpenAiDeploymentName
+            AzureOpenAI__ApiKey = $AzureOpenAiApiKey
+        }
+    }
+    elseif ($Name -eq 'mcp' -and $McpAuthEnabled) {
         $startParameters.Environment = @{
             Authentication__Enabled = $McpAuthEnabled
             Authentication__TenantId = $EntraTenantId

@@ -9,6 +9,11 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 ENV_FILE="${SANCTUARY_DEMO_ENV_FILE:-$SCRIPT_DIR/.env}"
 MCP_HEALTH_URL="http://localhost:3001/health"
 
+if [[ "${1:-}" == "--stop" ]]; then
+    bash "$SCRIPT_DIR/prepare-cowork-plugin.sh" --stop
+    exit 0
+fi
+
 fail() {
     echo "Error: $1" >&2
     exit 1

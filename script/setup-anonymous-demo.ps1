@@ -43,6 +43,9 @@ function Require-DemoValue {
 
 $settings = Import-DemoEnvironment $EnvFile
 $tunnelId = Require-DemoValue $settings 'TUNNEL_ID'
+$azureOpenAiEndpoint = Require-DemoValue $settings 'AZURE_OPENAI_ENDPOINT'
+$azureOpenAiDeploymentName = Require-DemoValue $settings 'AZURE_OPENAI_DEPLOYMENT_NAME'
+$azureOpenAiApiKey = Require-DemoValue $settings 'AZURE_OPENAI_API_KEY'
 $healthUrl = 'http://localhost:3001/health'
 
 # Restart an SSO MCP before running the anonymous package.
@@ -59,4 +62,7 @@ catch {
     -Plugin anonymous `
     -TunnelId $tunnelId `
     -McpAuthEnabled false `
+    -AzureOpenAiEndpoint $azureOpenAiEndpoint `
+    -AzureOpenAiDeploymentName $azureOpenAiDeploymentName `
+    -AzureOpenAiApiKey $azureOpenAiApiKey `
     -SkipPackageIfUnchanged

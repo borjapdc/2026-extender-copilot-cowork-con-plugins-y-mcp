@@ -1,9 +1,15 @@
 [CmdletBinding()]
 param(
-    [string]$EnvFile = (Join-Path $PSScriptRoot '.env')
+    [string]$EnvFile = (Join-Path $PSScriptRoot '.env'),
+    [switch]$Stop
 )
 
 $ErrorActionPreference = 'Stop'
+
+if ($Stop) {
+    & (Join-Path $PSScriptRoot 'prepare-cowork-plugin.ps1') -Stop
+    exit 0
+}
 
 # This script prepares the Entra SSO package and passes its public identity
 # settings only to the MCP process. It never stores a client secret.
@@ -47,6 +53,9 @@ $tenantId = Require-DemoValue $settings 'ENTRA_TENANT_ID'
 $clientId = Require-DemoValue $settings 'ENTRA_CLIENT_ID'
 $applicationIdUri = Require-DemoValue $settings 'ENTRA_APPLICATION_ID_URI'
 $ssoRegistrationId = Require-DemoValue $settings 'ENTRA_SSO_REGISTRATION_ID'
+$azureOpenAiEndpoint = Require-DemoValue $settings 'AZURE_OPENAI_ENDPOINT'
+$azureOpenAiDeploymentName = Require-DemoValue $settings 'AZURE_OPENAI_DEPLOYMENT_NAME'
+$azureOpenAiApiKey = Require-DemoValue $settings 'AZURE_OPENAI_API_KEY'
 $healthUrl = 'http://localhost:3001/health'
 
 # Restart an anonymous MCP before it can validate Entra JWTs.
@@ -67,4 +76,7 @@ catch {
     -EntraTenantId $tenantId `
     -EntraClientId $clientId `
     -EntraApplicationIdUri $applicationIdUri `
+    -AzureOpenAiEndpoint $azureOpenAiEndpoint `
+    -AzureOpenAiDeploymentName $azureOpenAiDeploymentName `
+    -AzureOpenAiApiKey $azureOpenAiApiKey `
     -SkipPackageIfUnchanged

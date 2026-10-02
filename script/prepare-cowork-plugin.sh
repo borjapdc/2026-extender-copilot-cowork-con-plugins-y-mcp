@@ -73,10 +73,28 @@ stop_process() {
     fi
 }
 
+stop_listener() {
+    local port="$1"
+    local process_name="$2"
+    local process_ids
+
+    process_ids="$(ss -ltnp "sport = :$port" 2>/dev/null | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u || true)"
+    for process_id in $process_ids; do
+        local command_line
+        command_line="$(tr '\0' ' ' < "/proc/$process_id/cmdline" 2>/dev/null || true)"
+        if [[ "$command_line" == *"$process_name"* ]]; then
+            kill "$process_id" 2>/dev/null || true
+            echo "Stopped $process_name listener on port $port (PID $process_id)."
+        fi
+    done
+}
+
 if [[ "$STOP_DEMO" == true ]]; then
     stop_process "devtunnel"
     stop_process "mcp"
     stop_process "api"
+    stop_listener 3001 "SanctuaryIntelligence.Mcp"
+    stop_listener 5100 "SanctuaryIntelligence.Api"
     exit 0
 fi
 
@@ -249,7 +267,13 @@ start_service() {
         return
     fi
 
-    if [[ "$name" == "mcp" && -n "${MCP_AUTH_ENABLED:-}" ]]; then
+    if [[ "$name" == "api" && -n "${AZURE_OPENAI_ENDPOINT:-}" ]]; then
+        nohup env \
+            AzureOpenAI__Endpoint="$AZURE_OPENAI_ENDPOINT" \
+            AzureOpenAI__DeploymentName="${AZURE_OPENAI_DEPLOYMENT_NAME:-}" \
+            AzureOpenAI__ApiKey="${AZURE_OPENAI_API_KEY:-}" \
+            dotnet run --project "$project" >"$log_file" 2>&1 &
+    elif [[ "$name" == "mcp" && -n "${MCP_AUTH_ENABLED:-}" ]]; then
         nohup env \
             Authentication__Enabled="$MCP_AUTH_ENABLED" \
             Authentication__TenantId="${ENTRA_TENANT_ID:-}" \

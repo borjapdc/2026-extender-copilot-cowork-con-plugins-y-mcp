@@ -35,7 +35,9 @@ Copia [`.env.example`](.env.example) como `.env` en este directorio y reemplaza 
 cp script/.env.example script/.env
 ```
 
-`.env` esta excluido de Git. Contiene identificadores publicos del tunel y de Entra, pero no debe contener client secrets, tokens ni claves. Puedes indicar otra ruta mediante `SANCTUARY_DEMO_ENV_FILE`.
+`.env` esta excluido de Git. Contiene identificadores del tunel y de Entra y puede contener la API key local de Azure OpenAI; no lo compartas ni lo subas al repositorio. Puedes indicar otra ruta mediante `SANCTUARY_DEMO_ENV_FILE`.
+
+Para usar Azure OpenAI real, completa tambien `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT_NAME` y `AZURE_OPENAI_API_KEY` en `.env`. Los scripts entregan estos valores solo al proceso API mediante variables de entorno; `src/SanctuaryIntelligence.Api/appsettings.json` no contiene claves ni valores de despliegue.
 
 ## Plugin anonimo
 
@@ -79,10 +81,14 @@ Para detener los procesos iniciados por los scripts:
 
 ```bash
 bash script/prepare-cowork-plugin.sh --stop
+bash script/setup-anonymous-demo.sh --stop
+bash script/setup-entra-sso-demo.sh --stop
 ```
 
 ```powershell
 pwsh -File ./script/prepare-cowork-plugin.ps1 -Stop
+pwsh -File ./script/setup-anonymous-demo.ps1 -Stop
+pwsh -File ./script/setup-entra-sso-demo.ps1 -Stop
 ```
 
 El MCP solo puede estar en un modo de autenticacion por ejecucion. Detenlo y reinicialo despues de cambiar `Authentication:Enabled`; no instales ambos plugins contra la misma instancia durante la demo.
