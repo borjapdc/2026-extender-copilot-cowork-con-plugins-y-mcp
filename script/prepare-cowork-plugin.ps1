@@ -194,7 +194,9 @@ Set-Content -NoNewline -Path $tunnelPidPath -Value $tunnelProcess.Id
 $tunnelUrl = $null
 for ($attempt = 0; $attempt -lt 30; $attempt++) {
     $tunnelOutput = Get-Content -Raw $tunnelLogPath -ErrorAction SilentlyContinue
-    $urls = [regex]::Matches($tunnelOutput, 'https://[A-Za-z0-9.:-]+') | ForEach-Object { $_.Value.TrimEnd('/') } | Where-Object { $_ -notmatch '-inspect\.' }
+    $urls = if ($tunnelOutput) {
+        [regex]::Matches($tunnelOutput, 'https://[A-Za-z0-9.:-]+') | ForEach-Object { $_.Value.TrimEnd('/') } | Where-Object { $_ -notmatch '-inspect\.' }
+    }
     $tunnelUrl = $urls | Select-Object -First 1
     if ($tunnelUrl) {
         break
